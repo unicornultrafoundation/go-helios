@@ -19,7 +19,7 @@ type OrdererDagIndex interface {
 }
 
 // Orderer processes events to reach finality on their order.
-// Unlike consensus.Hashgraph, this raw level of abstraction doesn't track cheaters detection
+// Unlike Helios consensus, this raw level of abstraction doesn't track cheaters detection
 type Orderer struct {
 	config Config
 	crit   func(error)
@@ -33,7 +33,7 @@ type Orderer struct {
 }
 
 // NewOrderer creates Orderer instance.
-// Unlike Hashgraph, Orderer doesn't updates DAG indexes for events, and doesn't detect cheaters
+// Unlike Helios consensus, Orderer doesn't updates DAG indexes for events, and doesn't detect cheaters
 // It has only one purpose - reaching consensus on events order.
 func NewOrderer(store *Store, input EventSource, dagIndex OrdererDagIndex, crit func(error), config Config) *Orderer {
 	p := &Orderer{
