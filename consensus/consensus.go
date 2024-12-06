@@ -16,7 +16,7 @@ type DagIndex interface {
 	dagidx.ForklessCause
 }
 
-// Hashgraph performs events ordering and detects cheaters
+// Consensus performs Helios events ordering and detects cheaters
 // It's a wrapper around Orderer, which adds features which might potentially be application-specific:
 // confirmed events traversal, cheaters detection.
 // Use this structure if need a general-purpose consensus. Instead, use lower-level consensus.Orderer.

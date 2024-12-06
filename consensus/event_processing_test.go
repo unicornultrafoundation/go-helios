@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+
 	"github.com/unicornultrafoundation/go-helios/native/dag"
 	"github.com/unicornultrafoundation/go-helios/native/dag/tdag"
 	"github.com/unicornultrafoundation/go-helios/native/idx"
@@ -18,47 +19,47 @@ const (
 	TestMaxEpochEvents = 200
 )
 
-func TestHashgraphRandom_1(t *testing.T) {
-	testHashgraphRandom(t, []pos.Weight{1}, 0)
+func TestHeliosRandom_1(t *testing.T) {
+	testHeliosRandom(t, []pos.Weight{1}, 0)
 }
 
-func TestHashgraphRandom_big1(t *testing.T) {
-	testHashgraphRandom(t, []pos.Weight{math.MaxUint32 / 2}, 0)
+func TestHeliosRandom_big1(t *testing.T) {
+	testHeliosRandom(t, []pos.Weight{math.MaxUint32 / 2}, 0)
 }
 
-func TestHashgraphRandom_big2(t *testing.T) {
-	testHashgraphRandom(t, []pos.Weight{math.MaxUint32 / 4, math.MaxUint32 / 4}, 0)
+func TestHeliosRandom_big2(t *testing.T) {
+	testHeliosRandom(t, []pos.Weight{math.MaxUint32 / 4, math.MaxUint32 / 4}, 0)
 }
 
-func TestHashgraphRandom_big3(t *testing.T) {
-	testHashgraphRandom(t, []pos.Weight{math.MaxUint32 / 8, math.MaxUint32 / 8, math.MaxUint32 / 4}, 0)
+func TestHeliosRandom_big3(t *testing.T) {
+	testHeliosRandom(t, []pos.Weight{math.MaxUint32 / 8, math.MaxUint32 / 8, math.MaxUint32 / 4}, 0)
 }
 
-func TestHashgraphRandom_4(t *testing.T) {
-	testHashgraphRandom(t, []pos.Weight{1, 2, 3, 4}, 0)
+func TestHeliosRandom_4(t *testing.T) {
+	testHeliosRandom(t, []pos.Weight{1, 2, 3, 4}, 0)
 }
 
-func TestHashgraphRandom_3_1(t *testing.T) {
-	testHashgraphRandom(t, []pos.Weight{1, 1, 1, 1}, 1)
+func TestHeliosRandom_3_1(t *testing.T) {
+	testHeliosRandom(t, []pos.Weight{1, 1, 1, 1}, 1)
 }
 
-func TestHashgraphRandom_67_33(t *testing.T) {
-	testHashgraphRandom(t, []pos.Weight{33, 67}, 1)
+func TestHeliosRandom_67_33(t *testing.T) {
+	testHeliosRandom(t, []pos.Weight{33, 67}, 1)
 }
 
-func TestHashgraphRandom_67_33_4(t *testing.T) {
-	testHashgraphRandom(t, []pos.Weight{11, 11, 11, 67}, 3)
+func TestHeliosRandom_67_33_4(t *testing.T) {
+	testHeliosRandom(t, []pos.Weight{11, 11, 11, 67}, 3)
 }
 
-func TestHashgraphRandom_67_33_5(t *testing.T) {
-	testHashgraphRandom(t, []pos.Weight{11, 11, 11, 33, 34}, 3)
+func TestHeliosRandom_67_33_5(t *testing.T) {
+	testHeliosRandom(t, []pos.Weight{11, 11, 11, 33, 34}, 3)
 }
 
-func TestHashgraphRandom_2_8_10(t *testing.T) {
-	testHashgraphRandom(t, []pos.Weight{1, 2, 1, 2, 1, 2, 1, 2, 1, 2}, 3)
+func TestHeliosRandom_2_8_10(t *testing.T) {
+	testHeliosRandom(t, []pos.Weight{1, 2, 1, 2, 1, 2, 1, 2, 1, 2}, 3)
 }
 
-func testHashgraphRandom(t *testing.T, weights []pos.Weight, cheatersCount int) {
+func testHeliosRandom(t *testing.T, weights []pos.Weight, cheatersCount int) {
 	t.Helper()
 	testConsensusRandomAndReset(t, weights, false, cheatersCount, false)
 	testConsensusRandomAndReset(t, weights, false, cheatersCount, true)
