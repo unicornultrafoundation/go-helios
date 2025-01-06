@@ -3,9 +3,9 @@ package flushable
 import (
 	"bytes"
 	"fmt"
-	"io/ioutil"
 	"math/big"
 	"math/rand"
+	"os"
 	"sync"
 	"testing"
 	"time"
@@ -397,7 +397,7 @@ func cache16mb(string) (int, int) {
 }
 
 func dbProducer(name string) u2udb.DBProducer {
-	dir, err := ioutil.TempDir("", name)
+	dir, err := os.MkdirTemp("", name)
 	if err != nil {
 		panic(err)
 	}
