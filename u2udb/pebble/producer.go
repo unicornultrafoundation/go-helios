@@ -1,7 +1,6 @@
 package pebble
 
 import (
-	"io/ioutil"
 	"os"
 	"path/filepath"
 
@@ -23,7 +22,7 @@ func NewProducer(datadir string, getCacheFdLimit func(string) (int, int)) u2udb.
 
 // Names of existing databases.
 func (p *Producer) Names() []string {
-	files, err := ioutil.ReadDir(p.datadir)
+	files, err := os.ReadDir(p.datadir)
 	if err != nil {
 		panic(err)
 	}
