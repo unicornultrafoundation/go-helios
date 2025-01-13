@@ -1,6 +1,10 @@
 package memorydb
 
-import "github.com/unicornultrafoundation/go-helios/u2udb"
+import (
+	"errors"
+	
+	"github.com/unicornultrafoundation/go-helios/u2udb"
+)
 
 type Mod func(store u2udb.Store) u2udb.Store
 
@@ -24,6 +28,10 @@ func (p *Producer) Names() []string {
 
 // OpenDB or create db with name.
 func (p *Producer) OpenDB(name string) (u2udb.Store, error) {
+	// Validate name parameter
+	if !u2udb.IsValidDatabaseName(name) {
+		return nil, errors.New("invalid database name")
+	}
 	db := p.fs.OpenFakeDB(name)
 
 	for _, mod := range p.mods {
