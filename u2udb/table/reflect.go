@@ -9,15 +9,11 @@ import (
 )
 
 // MigrateTables sets target fields to database tables.
-func MigrateTables(s interface{}, db u2udb.Store) {
+func MigrateTables(s interface{}, db u2udb.Store) error {
 	value := reflect.ValueOf(s).Elem()
-
 	var keys uniqKeys
-	defer keys.Check() // nolint:errcheck
-
 	for i := 0; i < value.NumField(); i++ {
 		if prefix := value.Type().Field(i).Tag.Get("table"); prefix != "" && prefix != "-" {
-
 			field := value.Field(i)
 			var val reflect.Value
 			if db != nil {
@@ -30,6 +26,7 @@ func MigrateTables(s interface{}, db u2udb.Store) {
 			field.Set(val)
 		}
 	}
+	return keys.Check()
 }
 
 // OpenTables sets target fields to database tables.
