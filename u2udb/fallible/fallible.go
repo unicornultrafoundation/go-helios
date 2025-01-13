@@ -28,6 +28,9 @@ func Wrap(db u2udb.Store) *Fallible {
 
 // SetWriteCount to n.
 func (f *Fallible) SetWriteCount(n int) {
+	if n <= 0 {
+		return
+	}
 	count := int32(n)
 	atomic.StoreInt32(&f.writes, count)
 }
