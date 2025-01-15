@@ -54,9 +54,12 @@ func FakeConsensus(nodes []idx.ValidatorID, weights []pos.Weight, mods ...memory
 	crit := func(err error) {
 		panic(err)
 	}
-	store := NewStore(memorydb.New(), openEDB, crit, LiteStoreConfig())
+	store, err := NewStore(memorydb.New(), openEDB, crit, LiteStoreConfig())
+	if err != nil {
+		panic(err)
+	}
 
-	err := store.ApplyGenesis(&Genesis{
+	err = store.ApplyGenesis(&Genesis{
 		Validators: validators.Build(),
 		Epoch:      FirstEpoch,
 	})

@@ -157,7 +157,10 @@ func testRestartAndReset(t *testing.T, weights []pos.Weight, mutateWeights bool,
 		if r.Intn(10) == 0 {
 			prev := lchs[RESTORED]
 
-			store := NewMemStore()
+			store, err := NewMemStore()
+			if err != nil {
+				t.Fatal(err)
+			}
 			// copy prev DB into new one
 			{
 				it := prev.store.mainDB.NewIterator(nil, nil)

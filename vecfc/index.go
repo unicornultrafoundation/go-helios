@@ -95,15 +95,16 @@ func (vi *Index) initCaches() {
 }
 
 // Reset resets buffers.
-func (vi *Index) Reset(validators *pos.Validators, db u2udb.FlushableKVStore, getEvent func(hash.Event) dag.Event) {
+func (vi *Index) Reset(validators *pos.Validators, db u2udb.FlushableKVStore, getEvent func(hash.Event) dag.Event) error {
 	vi.Engine.Reset(validators, db, getEvent)
 	vi.vecDb = db
-	table.MigrateTables(&vi.table, vi.vecDb)
+	err := table.MigrateTables(&vi.table, vi.vecDb)
 	vi.getEvent = getEvent
 	vi.validators = validators
 	vi.validatorIdxs = validators.Idxs()
 	vi.cache.ForklessCause.Purge()
 	vi.onDropNotFlushed()
+	return err
 }
 
 func (vi *Index) GetEngineCallbacks() vecengine.Callbacks {

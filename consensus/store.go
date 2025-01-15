@@ -45,7 +45,7 @@ var (
 type EpochDBProducer func(epoch idx.Epoch) u2udb.Store
 
 // NewStore creates store over key-value db.
-func NewStore(mainDB u2udb.Store, getDB EpochDBProducer, crit func(error), cfg StoreConfig) *Store {
+func NewStore(mainDB u2udb.Store, getDB EpochDBProducer, crit func(error), cfg StoreConfig) (*Store, error) {
 	s := &Store{
 		getEpochDB: getDB,
 		cfg:        cfg,
@@ -53,11 +53,11 @@ func NewStore(mainDB u2udb.Store, getDB EpochDBProducer, crit func(error), cfg S
 		mainDB:     mainDB,
 	}
 
-	table.MigrateTables(&s.table, s.mainDB)
+	err := table.MigrateTables(&s.table, s.mainDB)
 
 	s.initCache()
 
-	return s
+	return s, err
 }
 
 func (s *Store) initCache() {
@@ -66,7 +66,7 @@ func (s *Store) initCache() {
 
 // NewMemStore creates store over memory map.
 // Store is always blank.
-func NewMemStore() *Store {
+func NewMemStore() (*Store, error) {
 	getDb := func(epoch idx.Epoch) u2udb.Store {
 		return memorydb.New()
 	}
@@ -83,9 +83,13 @@ func (s *Store) Close() error {
 		return nil
 	}
 
-	table.MigrateTables(&s.table, nil)
+	if err := table.MigrateTables(&s.table, nil); err != nil {
+		return err
+	}
 	table.MigrateCaches(&s.cache, setnil)
-	table.MigrateTables(&s.epochTable, nil)
+	if err := table.MigrateTables(&s.epochTable, nil); err != nil {
+		return err
+	}
 	err := s.mainDB.Close()
 	if err != nil {
 		return err
@@ -119,8 +123,7 @@ func (s *Store) openEpochDB(n idx.Epoch) error {
 	s.cache.FrameRoots.Purge()
 
 	s.epochDB = s.getEpochDB(n)
-	table.MigrateTables(&s.epochTable, s.epochDB)
-	return nil
+	return table.MigrateTables(&s.epochTable, s.epochDB)
 }
 
 /*

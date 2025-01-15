@@ -1,6 +1,7 @@
 package pebble
 
 import (
+	"errors"
 	"os"
 	"path/filepath"
 
@@ -39,6 +40,10 @@ func (p *Producer) Names() []string {
 
 // OpenDB or create db with name.
 func (p *Producer) OpenDB(name string) (u2udb.Store, error) {
+	// Validate name parameter
+	if !u2udb.IsValidDatabaseName(name) {
+		return nil, errors.New("invalid database name")
+	}
 	path := p.resolvePath(name)
 
 	err := os.MkdirAll(path, 0700)

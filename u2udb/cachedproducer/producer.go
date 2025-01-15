@@ -15,6 +15,10 @@ type cacheState struct {
 }
 
 func openDB(p u2udb.DBProducer, c *cacheState, name string) (u2udb.Store, error) {
+	// Validate name parameter
+	if !u2udb.IsValidDatabaseName(name) {
+		return nil, errors.New("invalid database name")
+	}
 	{ // protected by mutex
 		c.mu.Lock()
 		c.notDropped[name] = true

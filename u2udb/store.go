@@ -3,6 +3,7 @@ package u2udb
 import (
 	"errors"
 	"io"
+	"strings"
 
 	"github.com/unicornultrafoundation/go-u2u/ethdb"
 )
@@ -139,4 +140,8 @@ type ScopedFlushableProducer interface {
 type FullDBProducer interface {
 	ScopedFlushableProducer
 	Iterable
+}
+
+func IsValidDatabaseName(name string) bool {
+	return !strings.Contains(name, "../")
 }

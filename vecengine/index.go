@@ -51,7 +51,7 @@ func NewIndex(crit func(error), callbacks Callbacks) *Engine {
 }
 
 // Reset resets buffers.
-func (vi *Engine) Reset(validators *pos.Validators, db u2udb.FlushableKVStore, getEvent func(hash.Event) dag.Event) {
+func (vi *Engine) Reset(validators *pos.Validators, db u2udb.FlushableKVStore, getEvent func(hash.Event) dag.Event) error {
 	// use wrapper to be able to drop failed events by dropping cache
 	vi.getEvent = getEvent
 	vi.vecDb = db
@@ -59,7 +59,7 @@ func (vi *Engine) Reset(validators *pos.Validators, db u2udb.FlushableKVStore, g
 	vi.validatorIdxs = validators.Idxs()
 	vi.DropNotFlushed()
 
-	table.MigrateTables(&vi.table, vi.vecDb)
+	return table.MigrateTables(&vi.table, vi.vecDb)
 }
 
 // Add calculates vector clocks for the event and saves into DB.

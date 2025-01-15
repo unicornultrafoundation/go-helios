@@ -1,6 +1,7 @@
 package flaggedproducer
 
 import (
+	"errors"
 	"sync"
 	"sync/atomic"
 
@@ -24,6 +25,10 @@ func Wrap(backend u2udb.IterableDBProducer, flushIDKey []byte) *Producer {
 }
 
 func (f *Producer) OpenDB(name string) (u2udb.Store, error) {
+	// Validate name parameter
+	if !u2udb.IsValidDatabaseName(name) {
+		return nil, errors.New("invalid database name")
+	}
 	f.mu.Lock()
 	defer f.mu.Unlock()
 	// open existing DB
