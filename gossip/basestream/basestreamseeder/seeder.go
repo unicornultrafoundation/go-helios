@@ -158,6 +158,9 @@ func (s *BaseSeeder) readerLoop() {
 
 		case peerID := <-s.notifyUnregisteredPeer:
 			sessions := s.peerSessions[peerID]
+			if sessions == nil {
+				continue
+			}
 			for _, sid := range sessions {
 				delete(s.sessions, sessionIDAndPeer{sid, peerID})
 			}
