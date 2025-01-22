@@ -111,6 +111,9 @@ func (c *Cache) Remove(key interface{}) (present bool) {
 
 // Resize changes the cache size.
 func (c *Cache) Resize(maxWeight uint, maxSize int) (evicted int) {
+	if maxSize < 0 {
+		return evicted
+	}
 	c.lock.Lock()
 	evicted = c.lru.Resize(maxWeight, maxSize)
 	c.lock.Unlock()

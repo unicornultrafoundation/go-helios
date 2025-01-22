@@ -482,6 +482,8 @@ type cacheBatch struct {
 
 // Put adds "add key-value pair" operation into batch.
 func (b *cacheBatch) Put(key, value []byte) error {
+	b.db.lock.Lock()
+	defer b.db.lock.Unlock()
 	b.writes = append(b.writes, kv{common.CopyBytes(key), common.CopyBytes(value)})
 	b.size += len(value) + len(key)
 	return nil
@@ -489,6 +491,8 @@ func (b *cacheBatch) Put(key, value []byte) error {
 
 // Delete adds "remove key" operation into batch.
 func (b *cacheBatch) Delete(key []byte) error {
+	b.db.lock.Lock()
+	defer b.db.lock.Unlock()
 	b.writes = append(b.writes, kv{common.CopyBytes(key), nil})
 	b.size += len(key)
 	return nil

@@ -158,6 +158,9 @@ func (s *BaseSeeder) readerLoop() {
 
 		case peerID := <-s.notifyUnregisteredPeer:
 			sessions := s.peerSessions[peerID]
+			if sessions == nil {
+				continue
+			}
 			for _, sid := range sessions {
 				delete(s.sessions, sessionIDAndPeer{sid, peerID})
 			}
@@ -226,6 +229,9 @@ func (s *BaseSeeder) readerLoop() {
 				_ = s.senders[session.senderI].Enqueue(func() {
 					_ = session.sendChunk(resp)
 					atomic.AddInt64(&s.pendingResponsesSize, -int64(memSize))
+					if s.pendingResponsesSize < 0 {
+						s.pendingResponsesSize = 0
+					}
 				})
 			}
 		}

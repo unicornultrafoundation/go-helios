@@ -1,6 +1,10 @@
 package pos
 
-import "github.com/unicornultrafoundation/go-helios/native/idx"
+import (
+	"math"
+
+	"github.com/unicornultrafoundation/go-helios/native/idx"
+)
 
 type (
 	// Weight amount.
@@ -47,8 +51,11 @@ func (s *WeightCounter) CountByIdx(validatorIdx idx.Validator) bool {
 		return false
 	}
 	s.already[validatorIdx] = true
-
-	s.sum += s.validators.GetWeightByIdx(validatorIdx)
+	w := s.validators.GetWeightByIdx(validatorIdx)
+	if uint64(s.sum)+uint64(w) > math.MaxUint32 {
+		return false
+	}
+	s.sum += w
 	return true
 }
 
