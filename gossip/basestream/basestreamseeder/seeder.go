@@ -229,6 +229,9 @@ func (s *BaseSeeder) readerLoop() {
 				_ = s.senders[session.senderI].Enqueue(func() {
 					_ = session.sendChunk(resp)
 					atomic.AddInt64(&s.pendingResponsesSize, -int64(memSize))
+					if s.pendingResponsesSize < 0 {
+						s.pendingResponsesSize = 0
+					}
 				})
 			}
 		}
