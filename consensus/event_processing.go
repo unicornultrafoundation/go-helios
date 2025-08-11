@@ -1,6 +1,8 @@
 package consensus
 
 import (
+	"math"
+	
 	"github.com/pkg/errors"
 	"github.com/unicornultrafoundation/go-helios/consensus/election"
 	"github.com/unicornultrafoundation/go-helios/native/dag"
@@ -168,6 +170,11 @@ func (p *Orderer) calcFrameIdx(e dag.Event, checkOnly bool) (selfParentFrame, fr
 		selfParentFrame = p.input.GetEvent(*e.SelfParent()).Frame()
 	}
 
+	// Input validation: prevent DoS attacks with excessive frame ranges
+	if selfParentFrame > math.MaxUint32 {
+		selfParentFrame = math.MaxUint32
+	}
+
 	// Note: we cannot "skip" frames and also we must check that event is caused by 2/3W+1 roots at F, even if one
 	// of the parents has a frame >= F+1
 	// The reason of those checks is that "forkless caused" relation isn't transitive in a case if there's at least one
@@ -176,6 +183,15 @@ func (p *Orderer) calcFrameIdx(e dag.Event, checkOnly bool) (selfParentFrame, fr
 	maxFrameToCheck := selfParentFrame + 100
 	if checkOnly {
 		maxFrameToCheck = e.Frame()
+		// Validate claimed frame to prevent overflow
+		if maxFrameToCheck > math.MaxUint32 {
+			maxFrameToCheck = math.MaxUint32
+		}
+	}
+	
+	// Prevent excessive iteration ranges that could cause DoS
+	if maxFrameToCheck > selfParentFrame + 1000 {
+		maxFrameToCheck = selfParentFrame + 1000
 	}
 
 	var f idx.Frame

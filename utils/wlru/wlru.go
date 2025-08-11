@@ -1,6 +1,8 @@
 package wlru
 
 import (
+	"errors"
+	"math"
 	"sync"
 
 	"github.com/unicornultrafoundation/go-helios/utils/simplewlru"
@@ -20,6 +22,19 @@ func New(maxWeight uint, maxSize int) (*Cache, error) {
 // NewWithEvict constructs a fixed weight/size cache with the given eviction
 // callback.
 func NewWithEvict(maxWeight uint, maxSize int, onEvicted func(key interface{}, value interface{})) (*Cache, error) {
+	// Preserve existing error behavior for negative sizes
+	if maxSize < 0 {
+		return nil, errors.New("must provide a non-negative size")
+	}
+	
+	// Prevent overflow conditions
+	if maxSize > math.MaxInt32 {
+		maxSize = math.MaxInt32
+	}
+	if maxWeight > math.MaxUint32 {
+		maxWeight = math.MaxUint32
+	}
+	
 	lru, err := simplewlru.NewWithEvict(maxWeight, maxSize, onEvicted)
 	if err != nil {
 		return nil, err
@@ -39,6 +54,12 @@ func (c *Cache) Purge() {
 
 // Add adds a value to the cache. Returns true if an eviction occurred.
 func (c *Cache) Add(key, value interface{}, weight uint) (evicted int) {
+	if key == nil || value == nil {
+		return 0
+	}
+	if weight > math.MaxUint32 {
+		weight = math.MaxUint32
+	}
 	c.lock.Lock()
 	evicted = c.lru.Add(key, value, weight)
 	c.lock.Unlock()
@@ -47,6 +68,9 @@ func (c *Cache) Add(key, value interface{}, weight uint) (evicted int) {
 
 // Get looks up a key's value from the cache.
 func (c *Cache) Get(key interface{}) (value interface{}, ok bool) {
+	if key == nil {
+		return nil, false
+	}
 	c.lock.Lock()
 	value, ok = c.lru.Get(key)
 	c.lock.Unlock()
@@ -56,6 +80,9 @@ func (c *Cache) Get(key interface{}) (value interface{}, ok bool) {
 // Contains checks if a key is in the cache, without updating the
 // recent-ness or deleting it for being stale.
 func (c *Cache) Contains(key interface{}) bool {
+	if key == nil {
+		return false
+	}
 	c.lock.RLock()
 	containKey := c.lru.Contains(key)
 	c.lock.RUnlock()
@@ -65,6 +92,9 @@ func (c *Cache) Contains(key interface{}) bool {
 // Peek returns the key value (or undefined if not found) without updating
 // the "recently used"-ness of the key.
 func (c *Cache) Peek(key interface{}) (value interface{}, ok bool) {
+	if key == nil {
+		return nil, false
+	}
 	c.lock.RLock()
 	value, ok = c.lru.Peek(key)
 	c.lock.RUnlock()
@@ -75,6 +105,13 @@ func (c *Cache) Peek(key interface{}) (value interface{}, ok bool) {
 // recent-ness or deleting it for being stale, and if not, adds the value.
 // Returns whether found and whether an eviction occurred.
 func (c *Cache) ContainsOrAdd(key, value interface{}, weight uint) (ok bool, evicted int) {
+	if key == nil || value == nil {
+		return false, 0
+	}
+	if weight > math.MaxUint32 {
+		weight = math.MaxUint32
+	}
+	
 	c.lock.Lock()
 	defer c.lock.Unlock()
 
@@ -89,6 +126,13 @@ func (c *Cache) ContainsOrAdd(key, value interface{}, weight uint) (ok bool, evi
 // recent-ness or deleting it for being stale, and if not, adds the value.
 // Returns whether found and whether an eviction occurred.
 func (c *Cache) PeekOrAdd(key, value interface{}, weight uint) (previous interface{}, ok bool, evicted int) {
+	if key == nil || value == nil {
+		return nil, false, 0
+	}
+	if weight > math.MaxUint32 {
+		weight = math.MaxUint32
+	}
+	
 	c.lock.Lock()
 	defer c.lock.Unlock()
 
@@ -103,6 +147,9 @@ func (c *Cache) PeekOrAdd(key, value interface{}, weight uint) (previous interfa
 
 // Remove removes the provided key from the cache.
 func (c *Cache) Remove(key interface{}) (present bool) {
+	if key == nil {
+		return false
+	}
 	c.lock.Lock()
 	present = c.lru.Remove(key)
 	c.lock.Unlock()
@@ -113,6 +160,12 @@ func (c *Cache) Remove(key interface{}) (present bool) {
 func (c *Cache) Resize(maxWeight uint, maxSize int) (evicted int) {
 	if maxSize < 0 {
 		return evicted
+	}
+	if maxSize > math.MaxInt32 {
+		maxSize = math.MaxInt32
+	}
+	if maxWeight > math.MaxUint32 {
+		maxWeight = math.MaxUint32
 	}
 	c.lock.Lock()
 	evicted = c.lru.Resize(maxWeight, maxSize)
