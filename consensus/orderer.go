@@ -9,7 +9,7 @@ import (
 )
 
 type OrdererCallbacks struct {
-	ApplyEvent func(decidedFrame idx.Frame, event hash.Event) (sealEpoch *pos.Validators)
+	ApplyAtropos func(decidedFrame idx.Frame, atropos, electing hash.Event) (sealEpoch *pos.Validators)
 
 	EpochDBLoaded func(idx.Epoch)
 }

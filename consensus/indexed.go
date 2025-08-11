@@ -85,7 +85,7 @@ func (p *Indexed) Process(e dag.Event) (err error) {
 func (p *Indexed) Bootstrap(callback types.ConsensusCallbacks) error {
 	base := p.Consensus.OrdererCallbacks()
 	ordererCallbacks := OrdererCallbacks{
-		ApplyEvent: base.ApplyEvent,
+		ApplyAtropos: base.ApplyAtropos,
 		EpochDBLoaded: func(epoch idx.Epoch) {
 			if base.EpochDBLoaded != nil {
 				base.EpochDBLoaded(epoch)

@@ -52,14 +52,14 @@ func (p *Consensus) confirmEvents(frame idx.Frame, event hash.Event, onEventConf
 	return err
 }
 
-func (p *Consensus) applyEvent(decidedFrame idx.Frame, event hash.Event) *pos.Validators {
-	eventVecClock := p.dagIndex.GetMergedHighestBefore(event)
+func (p *Consensus) applyAtropos(decidedFrame idx.Frame, atropos, electing hash.Event) *pos.Validators {
+	atroposVecClock := p.dagIndex.GetMergedHighestBefore(atropos)
 
 	validators := p.store.GetValidators()
 	// cheaters are ordered deterministically
 	cheaters := make([]idx.ValidatorID, 0, validators.Len())
 	for creatorIdx, creator := range validators.SortedIDs() {
-		if eventVecClock.Get(idx.Validator(creatorIdx)).IsForkDetected() {
+		if atroposVecClock.Get(idx.Validator(creatorIdx)).IsForkDetected() {
 			cheaters = append(cheaters, creator)
 		}
 	}
@@ -68,12 +68,13 @@ func (p *Consensus) applyEvent(decidedFrame idx.Frame, event hash.Event) *pos.Va
 		return nil
 	}
 	blockCallback := p.callback.BeginBlock(&types.Block{
-		Event:    event,
+		Electing: electing,
+		Event:    atropos,
 		Cheaters: cheaters,
 	})
 
 	// traverse newly confirmed events
-	err := p.confirmEvents(decidedFrame, event, blockCallback.ApplyEvent)
+	err := p.confirmEvents(decidedFrame, atropos, blockCallback.ApplyEvent)
 	if err != nil {
 		p.crit(err)
 	}
@@ -99,7 +100,7 @@ func (p *Consensus) BootstrapWithOrderer(callback types.ConsensusCallbacks, orde
 
 func (p *Consensus) OrdererCallbacks() OrdererCallbacks {
 	return OrdererCallbacks{
-		ApplyEvent: p.applyEvent,
+		ApplyAtropos: p.applyAtropos,
 	}
 }
 
