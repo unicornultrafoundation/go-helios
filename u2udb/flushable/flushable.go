@@ -3,12 +3,14 @@ package flushable
 import (
 	"bytes"
 	"errors"
+	"math"
 	"sync"
 
 	rbt "github.com/emirpasic/gods/trees/redblacktree"
 	"github.com/unicornultrafoundation/go-u2u/common"
 
 	"github.com/unicornultrafoundation/go-helios/u2udb"
+	"github.com/unicornultrafoundation/go-helios/u2udb/devnulldb"
 )
 
 var (
@@ -72,6 +74,12 @@ func (w *Flushable) Put(key []byte, value []byte) error {
 	if value == nil || key == nil {
 		return errors.New("flushable: key or value is nil")
 	}
+	if len(key) > math.MaxUint16 {
+		return errors.New("flushable: key too large")
+	}
+	if len(value) > math.MaxInt32/2 {
+		return errors.New("flushable: value too large")
+	}
 
 	w.put(key, value)
 	return nil
@@ -79,7 +87,12 @@ func (w *Flushable) Put(key []byte, value []byte) error {
 
 func (w *Flushable) put(key []byte, value []byte) {
 	w.modified.Put(string(key), common.CopyBytes(value))
-	*w.sizeEstimation += len(key) + len(value) + 128
+	newSize := len(key) + len(value) + 128
+	if *w.sizeEstimation > math.MaxInt32 - newSize {
+		*w.sizeEstimation = math.MaxInt32
+	} else {
+		*w.sizeEstimation += newSize
+	}
 }
 
 // Has checks if key is in the exists. Looks in cache first, then - in DB.
@@ -122,6 +135,13 @@ func (w *flushableReader) Get(key []byte) ([]byte, error) {
 func (w *Flushable) Delete(key []byte) error {
 	w.lock.Lock()
 	defer w.lock.Unlock()
+	
+	if key == nil {
+		return errors.New("flushable: key is nil")
+	}
+	if len(key) > math.MaxUint16 {
+		return errors.New("flushable: key too large")
+	}
 
 	w.delete(key)
 	return nil
@@ -129,7 +149,12 @@ func (w *Flushable) Delete(key []byte) error {
 
 func (w *Flushable) delete(key []byte) {
 	w.modified.Put(string(key), nil)
-	*w.sizeEstimation += len(key) + 128 // it should be (len(key) - len(old value)), but we'd need to read old value
+	newSize := len(key) + 128 // it should be (len(key) - len(old value)), but we'd need to read old value
+	if *w.sizeEstimation > math.MaxInt32 - newSize {
+		*w.sizeEstimation = math.MaxInt32
+	} else {
+		*w.sizeEstimation += newSize
+	}
 }
 
 // DropNotFlushed drops all the not flushed keys.
@@ -443,8 +468,9 @@ func (w *flushableReader) NewIterator(prefix []byte, start []byte) u2udb.Iterato
 	defer w.lock.RUnlock()
 
 	if w.modified == nil {
+		db := devnulldb.New()
 		return &errIterator{
-			Iterator: devnull.NewIterator(nil, nil),
+			Iterator: db.NewIterator(nil, nil),
 			err:      errClosed,
 		}
 	}
@@ -482,19 +508,48 @@ type cacheBatch struct {
 
 // Put adds "add key-value pair" operation into batch.
 func (b *cacheBatch) Put(key, value []byte) error {
+	if key == nil || value == nil {
+		return errors.New("flushable: key or value is nil")
+	}
+	if len(key) > math.MaxUint16 {
+		return errors.New("flushable: key too large")
+	}
+	if len(value) > math.MaxInt32/2 {
+		return errors.New("flushable: value too large")
+	}
+	
 	b.db.lock.Lock()
 	defer b.db.lock.Unlock()
 	b.writes = append(b.writes, kv{common.CopyBytes(key), common.CopyBytes(value)})
-	b.size += len(value) + len(key)
+	
+	newSize := len(value) + len(key)
+	if b.size > math.MaxInt32 - newSize {
+		b.size = math.MaxInt32
+	} else {
+		b.size += newSize
+	}
 	return nil
 }
 
 // Delete adds "remove key" operation into batch.
 func (b *cacheBatch) Delete(key []byte) error {
+	if key == nil {
+		return errors.New("flushable: key is nil")
+	}
+	if len(key) > math.MaxUint16 {
+		return errors.New("flushable: key too large")
+	}
+	
 	b.db.lock.Lock()
 	defer b.db.lock.Unlock()
 	b.writes = append(b.writes, kv{common.CopyBytes(key), nil})
-	b.size += len(key)
+	
+	newSize := len(key)
+	if b.size > math.MaxInt32 - newSize {
+		b.size = math.MaxInt32
+	} else {
+		b.size += newSize
+	}
 	return nil
 }
 
