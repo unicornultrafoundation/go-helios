@@ -139,7 +139,7 @@ func New(path string, cache int, handles int, onClose func() error, onDrop func(
 	defer ref.Unref()
 	db, err := pebble.Open(path, &pebble.Options{
 		Cache:           ref,       // default 8 MB
-		MemTableSize:    cache / 3, // default 4 MB
+		MemTableSize:    uint64(cache / 3), // default 4 MB
 		MaxOpenFiles:    handles,   // default 1000
 		WALBytesPerSync: 0,         // default 0 (matches RocksDB = no background syncing)
 		MaxConcurrentCompactions: func() int {
@@ -256,7 +256,11 @@ func (db *Database) NewBatch() u2udb.Batch {
 // of database content with a particular key prefix, starting at a particular
 // initial key (or after, if it does not exist).
 func (db *Database) NewIterator(prefix []byte, start []byte) u2udb.Iterator {
-	x := iterator{db.underlying.NewIter(bytesPrefixRange(prefix, start)), false, false}
+	iter, err := db.underlying.NewIter(bytesPrefixRange(prefix, start))
+	if err != nil {
+		panic(err) // Follow existing panic pattern in codebase
+	}
+	x := iterator{iter, false, false}
 	return &x
 }
 
@@ -407,7 +411,11 @@ func (s *snapshot) Get(key []byte) ([]byte, error) {
 }
 
 func (s *snapshot) NewIterator(prefix []byte, start []byte) u2udb.Iterator {
-	x := iterator{s.snap.NewIter(bytesPrefixRange(prefix, start)), false, false}
+	iter, err := s.snap.NewIter(bytesPrefixRange(prefix, start))
+	if err != nil {
+		panic(err) // Follow existing panic pattern in codebase
+	}
+	x := iterator{iter, false, false}
 	return &x
 }
 
@@ -456,7 +464,7 @@ func (b *batch) Reset() {
 // Replay replays the batch contents.
 func (b *batch) Replay(w u2udb.Writer) (err error) {
 	for iter := b.b.Reader(); len(iter) > 0; {
-		kind, key, value, ok := iter.Next()
+		kind, key, value, ok, _ := iter.Next()
 		if !ok {
 			break
 		}
